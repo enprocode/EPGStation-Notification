@@ -27,6 +27,10 @@ recordingFailedCommand: "/path/to/bin/epgst-notify slackRecError"
 | [導入手順](docs/setup.md) | 取得方法、Slack / Discord 設定、EPGStation 連携 |
 | [開発ガイド](docs/development.md) | ビルド、テスト、Docker、リリース、CI |
 
+## Security
+
+脆弱性を発見した場合の報告方法は [SECURITY.md](SECURITY.md) を参照してください。
+
 ## License
 
-MIT License — 詳細は [LICENSE](LICENSE)。脆弱性報告は [SECURITY.md](SECURITY.md)。
+MIT License — 詳細は [LICENSE](LICENSE) を参照してください。
