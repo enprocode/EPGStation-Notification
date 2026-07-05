@@ -2,7 +2,7 @@
 EPGStationの録画開始・終了・エラー取得した内容をSlack・Discord通知スクリプトです。  
 Slack and Discord notification script for EPGStation recording start, end, and error acquisition.
 
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/Junch25/EPGStation-Notification/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/Junch25/EPGStation-Notification/tree/main)
+[![CI](https://github.com/enprocode/EPGStation-Notification/actions/workflows/ci.yml/badge.svg)](https://github.com/enprocode/EPGStation-Notification/actions/workflows/ci.yml)
 
 ## 導入手順
 ### Slackアプリを作成
@@ -12,7 +12,7 @@ URL: https://api.slack.com
 
 ### スクリプト配置
 ```shell script
-$ git clone https://github.com/Junch25/EPGStation-Notification.git
+$ git clone https://github.com/enprocode/EPGStation-Notification.git
 ```
 
 ### Slackの設定
@@ -69,7 +69,7 @@ $ echo "1.1.0" > VERSION
 $ git add VERSION
 $ git commit -m "chore: bump version to 1.1.0"
 
-# 2. タグを作成して push（GitHub Actions / CircleCI が Release を作成）
+# 2. タグを作成して push（GitHub Actions が Release を作成）
 $ git tag v1.1.0
 $ git push origin main
 $ git push origin v1.1.0
