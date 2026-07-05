@@ -1,0 +1,87 @@
+jobs:
+  build:
+    executor:
+      name: go/default
+      tag: "1.23"
+    steps:
+      - checkout
+      - go/load-cache
+      - go/mod-download
+      - go/save-cache
+      - go/test:
+          covermode: atomic
+          failfast: true
+          race: true
+      - run:
+          name: Run tests
+          command: |
+            mkdir -p /tmp/test-reports
+            gotestsum --junitfile /tmp/test-reports/unit-tests.xml -- -race -cover ./...
+            go test -timeout 30s -run ^TestSlack$ epgstation_notification/tests
+            go test -timeout 30s -run ^Test_send$ epgstation_notification/tests
+            go test -v -cover -coverprofile=/tmp/test-reports/coverage.out ./...
+      - run:
+          name: build
+          command: |
+            mkdir -p /tmp/artifact
+            GOOS=linux GOARCH=amd64 go build -o "epgstation-notification" main.go
+            mv epgstation-notification /tmp/artifact
+      - store_artifacts:
+          path: /tmp/artifact
+          destination: artifact
+      - store_test_results:
+          path: /tmp/test-reports
+  release:
+    executor:
+      name: go/default
+      tag: "1.23"
+    steps:
+      - checkout
+      - go/load-cache
+      - go/mod-download
+      - go/save-cache
+      - run:
+          name: Run tests
+          command: go test ./...
+      - run:
+          name: deploy
+          command: |
+            VERSION="$(tr -d '[:space:]' < VERSION)"
+            TAG="${CIRCLE_TAG#v}"
+            if [ -n "$CIRCLE_TAG" ] && [ "$VERSION" != "$TAG" ]; then
+              echo "VERSION ($VERSION) does not match tag ($TAG)"
+              exit 1
+            fi
+            mkdir -p /tmp/epgstation-notification
+            GOOS=linux GOARCH=amd64 go build -o "epgstation-notification" main.go
+            mv epgstation-notification /tmp/epgstation-notification
+            cp bin/config.yml /tmp/epgstation-notification
+            cd /tmp
+            zip -r "epgstation-notification-v${VERSION}-linux-amd64.zip" epgstation-notification/
+            mkdir -p /tmp/artifact
+            mv "epgstation-notification-v${VERSION}-linux-amd64.zip" /tmp/artifact/
+      - run:
+          name: Publish Release on GitHub
+          command: |
+            VERSION="$(tr -d '[:space:]' < VERSION)"
+            go install github.com/tcnksm/ghr@v0.16.2
+            ghr -t "${GITHUB_TOKEN}" -u "${CIRCLE_PROJECT_USERNAME}" -r "${CIRCLE_PROJECT_REPONAME}" -c "${CIRCLE_SHA1}" -delete "v${VERSION}" /tmp/artifact
+      - store_artifacts:
+          path: /tmp/artifact
+          destination: artifact
+
+orbs:
+  go: circleci/go@1.7.1
+version: 2.1
+workflows:
+  build:
+    jobs:
+      - build
+  release:
+    jobs:
+      - release:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/

@@ -1,0 +1,43 @@
+queue_rules:
+  - name: default
+    queue_conditions:
+      - check-success=build
+      - "#approved-reviews-by>=1"
+    merge_conditions:
+      - check-success=build
+      - check-success=Dependency Review
+    merge_method: merge
+
+pull_request_rules:
+  - name: automatic merge for Dependabot (patch/minor)
+    conditions:
+      - author=dependabot[bot]
+      - -draft
+      - -conflict
+      - label=dependencies
+      - check-success=build
+      - check-success=Dependency Review
+    actions:
+      merge:
+        method: squash
+
+  - name: automatic merge on approval
+    conditions:
+      - -author=dependabot[bot]
+      - -draft
+      - -conflict
+      - "#approved-reviews-by>=1"
+      - check-success=build
+      - check-success=Dependency Review
+    actions:
+      merge:
+        method: merge
+
+  - name: request review for Dependabot major updates
+    conditions:
+      - author=dependabot[bot]
+      - -check-success=build
+    actions:
+      comment:
+        message: |
+          Dependabot の major 更新です。CI が通ったうえで手動レビュー・マージしてください。
