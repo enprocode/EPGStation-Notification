@@ -1,6 +1,6 @@
 module epgst_notify
 
-go 1.23
+go 1.25
 
 require (
 	github.com/disgoorg/disgo v0.19.6
