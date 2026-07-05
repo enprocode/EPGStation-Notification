@@ -39,7 +39,10 @@ func Slack(icon, color string, withErrorInfo bool) error {
 
 	httpClient := &http.Client{Timeout: requestTimeout}
 	api := slack.New(cfg.SlackCfg.SlackToken, slack.OptionHTTPClient(httpClient))
-	title := truncateRunes(icon+env.Name, slackTitleMaxRunes)
+	title := truncateRunes(strings.TrimSpace(icon+env.Name), slackTitleMaxRunes)
+	if title == "" {
+		title = "Recording Notification"
+	}
 	attachment := slack.Attachment{
 		Fallback: title,
 		Color:    color,

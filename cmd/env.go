@@ -51,7 +51,7 @@ func loadCfg() (config cmdCfg, err error) {
 	if err != nil {
 		return config, err
 	}
-	err = yaml.UnmarshalStrict([]byte(data), &config)
+	err = yaml.UnmarshalStrict(data, &config)
 	if err != nil {
 		return config, err
 	}

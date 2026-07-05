@@ -19,7 +19,6 @@ const (
 	discordTitleMaxRunes      = 256
 	discordMaxEmbedFields     = 25
 	discordMaxEmbedTotalRunes = 6000
-	discordMaxEmbedsPerMessage = 10
 )
 
 type notificationField struct {
