@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"github.com/kelseyhightower/envconfig"
-	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
+
+	"github.com/kelseyhightower/envconfig"
+	"gopkg.in/yaml.v2"
 )
 
 type cmdEnv struct {
@@ -13,7 +14,7 @@ type cmdEnv struct {
 	ChannelName string `envconfig:"CHANNELNAME"`
 	StartAt     int    `envconfig:"STARTAT"`
 	EndAt       int    `envconfig:"ENDAT"`
-	Durarion    int    `envconfig:"DURATION"`
+	Duration    int    `envconfig:"DURATION"`
 	Name        string `envconfig:"NAME"`
 	Description string `envconfig:"DESCRIPTION"`
 	Extended    string `envconfig:"EXTENDED"`
@@ -30,7 +31,7 @@ type cmdCfg struct {
 	} `yaml:"slack-config"`
 	DiscordCfg struct {
 		DiscordWebhookToken string `yaml:"discord-webhook-token"`
-		DiscordWebhookId    int    `yaml:"discord-webhook"`
+		DiscordWebhookID    string `yaml:"discord-webhook"`
 	} `yaml:"discord-config"`
 }
 

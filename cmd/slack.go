@@ -2,80 +2,47 @@ package cmd
 
 import (
 	"fmt"
-	"log"
-	"time"
 
 	"github.com/slack-go/slack"
 )
 
-func Slack(Icon string, Col string) error {
-	Env, err := loadEnv()
+func Slack(icon, color string, withErrorInfo bool) error {
+	env, err := loadEnv()
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		return fmt.Errorf("load env: %w", err)
 	}
 
-	Cfg, err := loadCfg()
+	cfg, err := loadCfg()
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		return fmt.Errorf("load config: %w", err)
 	}
 
-	var (
-		Name        = Env.Name
-		CHName      = Env.ChannelName
-		CHType      = Env.ChannelType
-		StartAt     = Env.StartAt
-		EndAt       = Env.EndAt
-		Description = Env.Description
-		RecPath     = Env.RecPath
-		SlackKey    = Cfg.SlackCfg.SlackToken
-	)
+	fields := buildNotificationFields(env, withErrorInfo)
+	slackFields := make([]slack.AttachmentField, len(fields))
+	for i, field := range fields {
+		slackFields[i] = slack.AttachmentField{
+			Title: field.name,
+			Value: field.value,
+			Short: false,
+		}
+	}
 
-	StartAtFromUnix := time.Unix(int64(StartAt/1000), 0)
-	StartTime := StartAtFromUnix.Format("2006-01-02 15:04")
-	fmt.Println(StartTime)
-	EndAtFromUnix := time.Unix(int64(EndAt/1000), 0)
-	EndTime := EndAtFromUnix.Format("2006-01-02 15:04")
-	fmt.Println(EndTime)
-
-	api := slack.New(
-		SlackKey,
-		slack.OptionDebug(true),
-	)
+	api := slack.New(cfg.SlackCfg.SlackToken)
 	attachment := slack.Attachment{
-		Fallback: Icon + Name,
-		Color:    Col,
-		Title:    Icon + Name,
-		Fields: []slack.AttachmentField{
-			{
-				Title: "Channel",
-				Value: CHName + "/" + CHType,
-				Short: false,
-			},
-			{
-				Title: "Time",
-				Value: StartTime + " ~ " + EndTime,
-				Short: false,
-			},
-			{
-				Title: "Description",
-				Value: Description,
-				Short: false,
-			},
-			{
-				Title: "RecPath",
-				Value: RecPath,
-				Short: false,
-			},
-		},
+		Fallback: icon + env.Name,
+		Color:    color,
+		Title:    icon + env.Name,
+		Fields:   slackFields,
 	}
-	channelID, timestamp, err := api.PostMessage(
-		Cfg.SlackCfg.Channel,
+
+	_, _, err = api.PostMessage(
+		cfg.SlackCfg.Channel,
 		slack.MsgOptionAsUser(false),
 		slack.MsgOptionAttachments(attachment),
 	)
 	if err != nil {
-		fmt.Printf("%s\n", err)
+		return fmt.Errorf("post slack message: %w", err)
 	}
-	fmt.Printf("Message successfully sent to channel %s at %s", channelID, timestamp)
+
 	return nil
 }

@@ -25,8 +25,8 @@ slack-config:
   channel: "SLACK_CHANNEL_ID"
 
 discord-config:
-  discord-webhook-token: "DISCORD_API_TOKEN"
-  discord-webhook: "DISCORD_API_WEBHOOK"
+  discord-webhook-token: "DISCORD_WEBHOOK_TOKEN"
+  discord-webhook: "1234567890123456789"
 ```
 
 ### EPGStationへ設定追加

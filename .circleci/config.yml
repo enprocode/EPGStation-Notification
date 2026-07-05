@@ -18,7 +18,7 @@ jobs:
             mkdir -p /tmp/test-reports
             gotestsum --junitfile /tmp/test-reports/unit-tests.xml -- -race -cover ./...
             go test -timeout 30s -run ^TestSlack$ epgstation_notification/tests
-            go test -timeout 30s -run ^Test_send$ epgstation_notification/tests
+            go test -timeout 30s -run ^TestDiscordSend$ epgstation_notification/tests
             go test -v -cover -coverprofile=/tmp/test-reports/coverage.out ./...
       - run:
           name: build

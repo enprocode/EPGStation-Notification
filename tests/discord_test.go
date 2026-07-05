@@ -5,20 +5,24 @@ import (
 	"testing"
 )
 
-func Test_send(t *testing.T) {
+func TestDiscordSend(t *testing.T) {
 	type args struct {
-		Icon string
-		Col  int
+		Icon          string
+		Col           int
+		WithErrorInfo bool
 	}
 	tests := []struct {
-		name string
-		args args
+		name    string
+		args    args
+		wantErr bool
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cmd.DiscordSend(tt.args.Icon, tt.args.Col)
+			if err := cmd.DiscordSend(tt.args.Icon, tt.args.Col, tt.args.WithErrorInfo); (err != nil) != tt.wantErr {
+				t.Errorf("DiscordSend() error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
 }
