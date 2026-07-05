@@ -51,7 +51,7 @@ jobs:
         run: |
           mkdir -p dist/epgst-notify
           mv epgst-notify dist/epgst-notify/
-          cp bin/config.yml dist/epgst-notify/
+          cp bin/config.example.yml dist/epgst-notify/
           cd dist && zip -r "../epgst-notify-v${{ steps.version.outputs.version }}-linux-amd64.zip" epgst-notify/
           cd ..
           sha256sum "epgst-notify-v${{ steps.version.outputs.version }}-linux-amd64.zip" > checksums.txt

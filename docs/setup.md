@@ -9,7 +9,12 @@
 
 ### GitHub Release（推奨）
 
-[Releases](https://github.com/enprocode/EPGStation-Notification/releases) から `epgst-notify-v{version}-linux-amd64.zip` をダウンロードし、任意のディレクトリに展開してください。
+[Releases](https://github.com/enprocode/EPGStation-Notification/releases) から `epgst-notify-v{version}-linux-amd64.zip` をダウンロードし、任意のディレクトリに展開してください。展開後、テンプレートをコピーして設定用の `config.yml` を作成します。
+
+```shell
+cd /path/to/bin
+cp config.example.yml config.yml
+```
 
 ### ソースからビルド
 
@@ -17,14 +22,20 @@
 git clone https://github.com/enprocode/EPGStation-Notification.git
 cd EPGStation-Notification
 GOOS=linux GOARCH=amd64 go build -o bin/epgst-notify main.go
+cp bin/config.example.yml bin/config.yml
 ```
 
-展開後の構成:
+> `bin/config.example.yml` はプレースホルダ入りのテンプレートです。実際のトークンは
+> コピー先の `bin/config.yml` に記入してください。`bin/config.yml` は `.gitignore`
+> 済みなので、誤って commit される心配はありません。
+
+構成（`config.yml` は上記コピーで作成したもの）:
 
 ```
 /path/to/bin/
   epgst-notify
-  config.yml
+  config.example.yml   # テンプレート（追跡対象）
+  config.yml           # 実設定（コピーして作成・.gitignore 済み）
 ```
 
 ## 2. Slack 設定

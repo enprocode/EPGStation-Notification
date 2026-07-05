@@ -11,14 +11,15 @@
 
 セキュリティ上の問題を見つけた場合は、GitHub Issues ではなく非公開で報告してください。
 
-- リポジトリ: https://github.com/enprocode/EPGStation-Notification
-- 連絡先: GitHub の Security Advisories から報告するか、リポジトリオーナー (`enprocode`) に直接連絡してください
+- リポジトリの **Security** タブ → **Report a vulnerability** から非公開で報告してください（GitHub Private Vulnerability Reporting）
+- 直接リンク: https://github.com/enprocode/EPGStation-Notification/security/advisories/new
 
-報告後、内容を確認のうえ可能な限り早く返信します。修正版のリリース方針についても合わせてお知らせします。
+**初回応答の目安は 72 時間以内**です。内容を確認のうえ、修正版のリリース方針についても合わせてお知らせします。公開は修正リリース後に調整します。
 
 ## Security Recommendations
 
 - `config.yml` は **`epgst-notify` と同じディレクトリ** に配置してください
-- `bin/config.yml` には API トークンが含まれます。配置後は `chmod 600 bin/config.yml` を設定してください
+- `config.yml` には API トークンが含まれます。配置後は `chmod 600 config.yml` を設定してください
+- **実トークンを記入した `config.yml` を絶対にコミットしないでください。** リポジトリで追跡されるのはプレースホルダ入りの `bin/config.example.yml` のみで、実ファイル `bin/config.yml` は `.gitignore` 済みです
 - トークンや Webhook URL を Issue やログに公開しないでください
-- [GitHub Release](https://github.com/enprocode/EPGStation-Notification/releases) 成果物に含まれる `config.yml` はテンプレートです。本番用の値に必ず差し替えてください
+- [GitHub Release](https://github.com/enprocode/EPGStation-Notification/releases) 成果物にはテンプレート `config.example.yml` が含まれます。`config.yml` にコピーし、本番用の値に必ず差し替えてください
