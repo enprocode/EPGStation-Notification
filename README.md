@@ -2,7 +2,11 @@
 
 EPGStation の録画開始・終了・エラー時に Slack / Discord へ通知する CLI **`epgst-notify`** です。
 
-[![CI](https://github.com/enprocode/EPGStation-Notification/actions/workflows/ci.yml/badge.svg)](https://github.com/enprocode/EPGStation-Notification/actions/workflows/ci.yml)
+[![CI](https://github.com/enprocode/EPGStation-Notification/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/enprocode/EPGStation-Notification/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/enprocode/EPGStation-Notification/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/enprocode/EPGStation-Notification/actions/workflows/codeql.yml)
+[![Release](https://img.shields.io/github/v/release/enprocode/EPGStation-Notification?sort=semver)](https://github.com/enprocode/EPGStation-Notification/releases/latest)
+[![Go](https://img.shields.io/github/go-mod/go-version/enprocode/EPGStation-Notification)](go.mod)
+[![License](https://img.shields.io/github/license/enprocode/EPGStation-Notification)](LICENSE)
 
 ## クイックスタート
 
