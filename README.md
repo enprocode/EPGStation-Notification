@@ -136,7 +136,7 @@ docker compose exec go go test ./...
 ./docker.sh
 ```
 
-`docker.sh` は Linux amd64 向けに `bin/epgst-notify` をビルドします。
+`docker.sh` はコンテナ内の `/opt/src/main.go` をビルドし、Linux amd64 向け `bin/epgst-notify` を生成します。
 
 ### リリース
 
