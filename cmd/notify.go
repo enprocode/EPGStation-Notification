@@ -12,12 +12,14 @@ import (
 const requestTimeout = 30 * time.Second
 
 const (
-	slackFieldMaxRunes     = 2000
-	slackTitleMaxRunes     = 256
+	slackFieldMaxRunes        = 2000
+	slackTitleMaxRunes        = 256
 	discordFieldNameMaxRunes  = 256
 	discordFieldMaxRunes      = 1024
 	discordTitleMaxRunes      = 256
 	discordMaxEmbedFields     = 25
+	discordMaxEmbedTotalRunes = 6000
+	discordMaxEmbedsPerMessage = 10
 )
 
 type notificationField struct {
@@ -130,19 +132,74 @@ func splitDiscordField(name, value string) []notificationField {
 	return parts
 }
 
-func discordEmbedFieldsFromNotification(fields []notificationField) []notificationField {
-	sanitized := make([]notificationField, 0, len(fields))
-
+func discordEmbedTextRunes(title string, fields []notificationField) int {
+	total := len([]rune(title))
 	for _, field := range fields {
-		for _, part := range splitDiscordField(field.name, field.value) {
-			if len(sanitized) >= discordMaxEmbedFields {
-				return sanitized
+		total += len([]rune(field.name)) + len([]rune(field.value))
+	}
+	return total
+}
+
+func discordEmbedBatchesFromNotification(title string, fields []notificationField) [][]notificationField {
+	var batches [][]notificationField
+	current := make([]notificationField, 0, len(fields))
+	firstBatch := true
+
+	flush := func() {
+		if len(current) == 0 {
+			return
+		}
+		batches = append(batches, current)
+		current = make([]notificationField, 0, cap(current))
+		firstBatch = false
+	}
+
+	embedTitle := func() string {
+		if firstBatch {
+			return title
+		}
+		return ""
+	}
+
+	fits := func(part notificationField) bool {
+		if len(current) >= discordMaxEmbedFields {
+			return false
+		}
+		candidate := append(current, part)
+		return discordEmbedTextRunes(embedTitle(), candidate) <= discordMaxEmbedTotalRunes
+	}
+
+	addPart := func(part notificationField) {
+		for {
+			if fits(part) {
+				current = append(current, part)
+				return
 			}
-			sanitized = append(sanitized, part)
+
+			if len(current) > 0 {
+				flush()
+				continue
+			}
+
+			nameRunes := len([]rune(part.name))
+			maxValueRunes := discordMaxEmbedTotalRunes - discordEmbedTextRunes(embedTitle(), nil) - nameRunes
+			if maxValueRunes <= 0 {
+				maxValueRunes = 1
+			}
+			part.value = truncateRunes(part.value, maxValueRunes)
+			current = append(current, part)
+			return
 		}
 	}
 
-	return sanitized
+	for _, field := range fields {
+		for _, part := range splitDiscordField(field.name, field.value) {
+			addPart(part)
+		}
+	}
+
+	flush()
+	return batches
 }
 
 func parseDiscordWebhookID(id string) (snowflake.ID, error) {

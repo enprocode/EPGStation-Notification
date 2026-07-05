@@ -30,13 +30,14 @@ func DiscordSend(icon string, color int, withErrorInfo bool) error {
 		return err
 	}
 
-	fields := discordEmbedFieldsFromNotification(buildNotificationFields(env, withErrorInfo))
-	discordFields := make([]discord.EmbedField, len(fields))
-	for i, field := range fields {
-		discordFields[i] = discord.EmbedField{
-			Name:  field.name,
-			Value: field.value,
-		}
+	title := truncateRunes(strings.TrimSpace(icon+env.Name), discordTitleMaxRunes)
+	if title == "" {
+		title = "Recording Notification"
+	}
+
+	batches := discordEmbedBatchesFromNotification(title, buildNotificationFields(env, withErrorInfo))
+	if len(batches) == 0 {
+		batches = [][]notificationField{{}}
 	}
 
 	httpClient := &http.Client{Timeout: requestTimeout}
@@ -50,23 +51,41 @@ func DiscordSend(icon string, color int, withErrorInfo bool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
-	title := truncateRunes(strings.TrimSpace(icon+env.Name), discordTitleMaxRunes)
-	if title == "" {
-		title = "Recording Notification"
-	}
+	for batchStart := 0; batchStart < len(batches); batchStart += discordMaxEmbedsPerMessage {
+		batchEnd := batchStart + discordMaxEmbedsPerMessage
+		if batchEnd > len(batches) {
+			batchEnd = len(batches)
+		}
 
-	if _, err := client.CreateMessage(
-		discord.NewWebhookMessageCreate().WithEmbeds(
-			discord.Embed{
-				Title:  title,
+		embeds := make([]discord.Embed, batchEnd-batchStart)
+		for i, fields := range batches[batchStart:batchEnd] {
+			embedTitle := ""
+			if batchStart+i == 0 {
+				embedTitle = title
+			}
+
+			discordFields := make([]discord.EmbedField, len(fields))
+			for j, field := range fields {
+				discordFields[j] = discord.EmbedField{
+					Name:  field.name,
+					Value: field.value,
+				}
+			}
+
+			embeds[i] = discord.Embed{
+				Title:  embedTitle,
 				Color:  color,
 				Fields: discordFields,
-			},
-		),
-		rest.CreateWebhookMessageParams{},
-		rest.WithCtx(ctx),
-	); err != nil {
-		return fmt.Errorf("post discord message: %w", err)
+			}
+		}
+
+		if _, err := client.CreateMessage(
+			discord.NewWebhookMessageCreate().WithEmbeds(embeds...),
+			rest.CreateWebhookMessageParams{},
+			rest.WithCtx(ctx),
+		); err != nil {
+			return fmt.Errorf("post discord message: %w", err)
+		}
 	}
 
 	return nil

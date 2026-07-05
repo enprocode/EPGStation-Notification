@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -79,21 +80,73 @@ func TestSplitDiscordFieldSkipsEmpty(t *testing.T) {
 	}
 }
 
-func TestDiscordEmbedFieldsFromNotification(t *testing.T) {
-	fields := discordEmbedFieldsFromNotification([]notificationField{
+func TestDiscordEmbedBatchesFromNotification(t *testing.T) {
+	fields := discordEmbedBatchesFromNotification("title", []notificationField{
 		{name: "Description", value: "   "},
 		{name: "RecPath", value: "/recordings/test.m2ts"},
 		{name: "Extended", value: strings.Repeat("x", discordFieldMaxRunes+10)},
 	})
 
-	if len(fields) != 3 {
-		t.Fatalf("expected 3 sanitized fields, got %d", len(fields))
+	if len(fields) != 1 || len(fields[0]) != 3 {
+		t.Fatalf("expected 1 batch with 3 fields, got %d batches", len(fields))
 	}
-	if fields[0].name != "RecPath" {
-		t.Fatalf("expected RecPath first, got %q", fields[0].name)
+	if fields[0][0].name != "RecPath" {
+		t.Fatalf("expected RecPath first, got %q", fields[0][0].name)
 	}
-	if fields[1].name != "Extended (1/2)" {
-		t.Fatalf("unexpected split field name: %q", fields[1].name)
+	if fields[0][1].name != "Extended (1/2)" {
+		t.Fatalf("unexpected split field name: %q", fields[0][1].name)
+	}
+}
+
+func TestDiscordEmbedBatchesRespectTotalRunes(t *testing.T) {
+	title := strings.Repeat("t", discordTitleMaxRunes)
+	longValue := strings.Repeat("a", discordFieldMaxRunes)
+	fields := make([]notificationField, 0, 7)
+	for i := 1; i <= 7; i++ {
+		fields = append(fields, notificationField{
+			name:  fmt.Sprintf("Field %d", i),
+			value: longValue,
+		})
+	}
+
+	batches := discordEmbedBatchesFromNotification(title, fields)
+	if len(batches) < 2 {
+		t.Fatalf("expected multiple embed batches, got %d", len(batches))
+	}
+
+	for i, batch := range batches {
+		embedTitle := ""
+		if i == 0 {
+			embedTitle = title
+		}
+		if got := discordEmbedTextRunes(embedTitle, batch); got > discordMaxEmbedTotalRunes {
+			t.Fatalf("batch %d exceeds embed rune limit: %d", i, got)
+		}
+		if len(batch) > discordMaxEmbedFields {
+			t.Fatalf("batch %d exceeds field limit: %d", i, len(batch))
+		}
+	}
+}
+
+func TestDiscordEmbedBatchesSplitAcrossManyParts(t *testing.T) {
+	longValue := strings.Repeat("x", discordFieldMaxRunes*8)
+	batches := discordEmbedBatchesFromNotification("Program", []notificationField{
+		{name: "Description", value: longValue},
+	})
+
+	totalFields := 0
+	for i, batch := range batches {
+		totalFields += len(batch)
+		embedTitle := "Program"
+		if i > 0 {
+			embedTitle = ""
+		}
+		if got := discordEmbedTextRunes(embedTitle, batch); got > discordMaxEmbedTotalRunes {
+			t.Fatalf("batch %d exceeds embed rune limit: %d", i, got)
+		}
+	}
+	if totalFields < 8 {
+		t.Fatalf("expected at least 8 field parts across batches, got %d", totalFields)
 	}
 }
 
