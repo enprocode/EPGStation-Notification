@@ -4,8 +4,10 @@
 
 ```shell
 go vet ./...
-go test ./...
+go test -race ./...
 ```
+
+`-race` は CI と同じ条件で競合検出を行うためのオプションです。
 
 ## ビルド
 
@@ -29,20 +31,31 @@ docker compose exec go go test ./...
 
 ## リリース
 
-バージョンはリポジトリ直下の `VERSION` で管理します。
+バージョンはリポジトリ直下の `VERSION` で管理し、[セマンティックバージョニング](https://semver.org/lang/ja/)に従います（バグ修正のみは patch、後方互換の機能追加は minor）。
 
-```shell
-echo "1.1.0" > VERSION
-git add VERSION
-git commit -m "chore: bump version to 1.1.0"
-git tag v1.1.0
-git push origin main
-git push origin v1.1.0
-```
+1. `VERSION` を更新し、ブランチで PR を作成してマージします（例: patch リリース `1.0.1`）。
+
+   ```shell
+   git switch -c chore/bump-1.0.1
+   echo "1.0.1" > VERSION
+   git commit -am "chore: bump version to 1.0.1"
+   git push -u origin chore/bump-1.0.1
+   gh pr create --fill
+   # CI 通過後にマージ
+   ```
+
+2. `main` を最新化し、`VERSION` と一致するタグを push します。
+
+   ```shell
+   git switch main && git pull
+   git tag -a v1.0.1 -m "Release v1.0.1"
+   git push origin v1.0.1
+   ```
 
 - `v*` タグ push で GitHub Actions が Release を作成
 - `VERSION` とタグ名（`v` 除く）が一致しないと失敗
 - 成果物: `epgst-notify-v{version}-linux-amd64.zip`, `checksums.txt`
+- リリースノートはコミット/PR から自動生成されます
 
 ## CI / 自動化
 
