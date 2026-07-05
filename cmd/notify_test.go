@@ -33,6 +33,13 @@ func TestTruncateRunes(t *testing.T) {
 	if got := truncateRunes(long, 7); got != strings.Repeat("あ", 4)+"..." {
 		t.Fatalf("unexpected truncate result: %q", got)
 	}
+
+	if got := truncateRunes("hello", 0); got != "" {
+		t.Fatalf("expected empty string for non-positive max, got %q", got)
+	}
+	if got := truncateRunes("hello", 3); got != "hel" {
+		t.Fatalf("expected hard cut without ellipsis, got %q", got)
+	}
 }
 
 func TestFormatChannel(t *testing.T) {
@@ -41,6 +48,12 @@ func TestFormatChannel(t *testing.T) {
 	}
 	if got := formatChannel("  ", ""); got != "" {
 		t.Fatalf("expected empty channel, got %q", got)
+	}
+	if got := formatChannel("NHK", ""); got != "NHK" {
+		t.Fatalf("expected name only, got %q", got)
+	}
+	if got := formatChannel("", "GR"); got != "GR" {
+		t.Fatalf("expected type only, got %q", got)
 	}
 }
 
@@ -183,16 +196,45 @@ func TestParseDiscordWebhookID(t *testing.T) {
 	if _, err := parseDiscordWebhookID(""); err == nil {
 		t.Fatal("expected error for empty id")
 	}
+
+	if _, err := parseDiscordWebhookID("not-a-number"); err == nil {
+		t.Fatal("expected error for non-numeric id")
+	}
 }
 
 func TestValidateSlackCfg(t *testing.T) {
 	if err := validateSlackCfg(cmdCfg{}); err == nil {
 		t.Fatal("expected error for empty slack config")
 	}
+
+	tokenOnly := cmdCfg{}
+	tokenOnly.SlackCfg.SlackToken = "xoxb-token"
+	if err := validateSlackCfg(tokenOnly); err == nil {
+		t.Fatal("expected error when slack channel is missing")
+	}
+
+	valid := tokenOnly
+	valid.SlackCfg.Channel = "C1234567890"
+	if err := validateSlackCfg(valid); err != nil {
+		t.Fatalf("unexpected error for valid slack config: %v", err)
+	}
 }
 
 func TestValidateDiscordCfg(t *testing.T) {
 	if err := validateDiscordCfg(cmdCfg{}); err == nil {
 		t.Fatal("expected error for empty discord config")
+	}
+
+	badID := cmdCfg{}
+	badID.DiscordCfg.DiscordWebhookToken = "webhook-token"
+	badID.DiscordCfg.DiscordWebhookID = "not-a-number"
+	if err := validateDiscordCfg(badID); err == nil {
+		t.Fatal("expected error for invalid webhook id")
+	}
+
+	valid := badID
+	valid.DiscordCfg.DiscordWebhookID = "1234567890123456789"
+	if err := validateDiscordCfg(valid); err != nil {
+		t.Fatalf("unexpected error for valid discord config: %v", err)
 	}
 }
