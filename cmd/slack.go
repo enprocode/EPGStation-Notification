@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/slack-go/slack"
 )
@@ -16,22 +18,27 @@ func Slack(icon, color string, withErrorInfo bool) error {
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
+	if err := validateSlackCfg(cfg); err != nil {
+		return err
+	}
 
 	fields := buildNotificationFields(env, withErrorInfo)
 	slackFields := make([]slack.AttachmentField, len(fields))
 	for i, field := range fields {
 		slackFields[i] = slack.AttachmentField{
-			Title: field.name,
-			Value: field.value,
+			Title: truncateRunes(field.name, slackFieldMaxRunes),
+			Value: truncateRunes(field.value, slackFieldMaxRunes),
 			Short: false,
 		}
 	}
 
-	api := slack.New(cfg.SlackCfg.SlackToken)
+	httpClient := &http.Client{Timeout: requestTimeout}
+	api := slack.New(cfg.SlackCfg.SlackToken, slack.OptionHTTPClient(httpClient))
+	title := truncateRunes(icon+env.Name, slackTitleMaxRunes)
 	attachment := slack.Attachment{
-		Fallback: icon + env.Name,
+		Fallback: title,
 		Color:    color,
-		Title:    icon + env.Name,
+		Title:    title,
 		Fields:   slackFields,
 	}
 

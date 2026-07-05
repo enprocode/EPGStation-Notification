@@ -7,7 +7,7 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "epgstation_notification",
+	Use:   "epgst-notify",
 	Short: "Recording notification command",
 	Long:  `This is a recording notification command.`,
 }

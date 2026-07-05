@@ -6,4 +6,4 @@ services:
     container_name: '${COMPOSE_PROJECT_NAME}'
     tty: true
     volumes:
-      - "../../epgstation-notification/:/opt/src"
+      - "../../EPGStation-Notification/:/opt/src"

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"epgstation_notification/cmd"
+	"epgst_notify/cmd"
 	"testing"
 )
 

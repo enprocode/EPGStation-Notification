@@ -1,6 +1,6 @@
 package main
 
-import "epgstation_notification/cmd"
+import "epgst_notify/cmd"
 
 func main() {
 	cmd.Execute()

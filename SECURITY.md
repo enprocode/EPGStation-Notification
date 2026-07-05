@@ -2,18 +2,22 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
-
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.1.x   | :white_check_mark: |
+| 1.0.x   | :white_check_mark: |
 | < 1.0   | :x:                |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+セキュリティ上の問題を見つけた場合は、GitHub Issues ではなく非公開で報告してください。
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+- リポジトリ: https://github.com/enprocode/EPGStation-Notification
+- 連絡先: GitHub の Security Advisories から報告するか、リポジトリオーナー (`enprocode`) に直接連絡してください
+
+報告後、内容を確認のうえ可能な限り早く返信します。修正版のリリース方針についても合わせてお知らせします。
+
+## Security Recommendations
+
+- `bin/config.yml` には API トークンが含まれます。配置後は `chmod 600 bin/config.yml` を設定してください
+- トークンや Webhook URL を Issue やログに公開しないでください
+- Release 成果物に含まれる `config.yml` はテンプレートです。本番用の値に必ず差し替えてください

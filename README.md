@@ -18,7 +18,7 @@ $ git clone https://github.com/enprocode/EPGStation-Notification.git
 ### Slackの設定
 ```shell script
 # 編集
-$ cd epgstation_notification
+$ cd EPGStation-Notification
 $ vim bin/config.yml
 slack-config:
   slack-token: "SLACK_API_TOKEN"
@@ -29,20 +29,26 @@ discord-config:
   discord-webhook: "1234567890123456789"
 ```
 
+`config.yml` には API トークンが含まれるため、権限を制限してください。
+
+```shell script
+$ chmod 600 bin/config.yml
+```
+
 ### EPGStationへ設定追加
 ```shell script
 $ vim /path/to/config/config.yml
 # Slack
 ---
-recordingStartCommand: "/path/to/bin/epgstation-notification slackRecStart"
-recordingFinishCommand: "/path/to/bin/epgstation-notification slackRecEnd"
-recordingFailedCommand: "/path/to/bin/epgstation-notification slackRecError"
+recordingStartCommand: "/path/to/bin/epgst-notify slackRecStart"
+recordingFinishCommand: "/path/to/bin/epgst-notify slackRecEnd"
+recordingFailedCommand: "/path/to/bin/epgst-notify slackRecError"
 
 # Discord
 ---
-recordingStartCommand: "/path/to/bin/epgstation-notification discordRecStart"
-recordingFinishCommand: "/path/to/bin/epgstation-notification discordRecEnd"
-recordingFailedCommand: "/path/to/bin/epgstation-notification discordRecError"
+recordingStartCommand: "/path/to/bin/epgst-notify discordRecStart"
+recordingFinishCommand: "/path/to/bin/epgst-notify discordRecEnd"
+recordingFailedCommand: "/path/to/bin/epgst-notify discordRecError"
 ```
 ### EPGStation再起動
 ```shell script
@@ -51,12 +57,12 @@ $ sudo pm2 restart epgstation
 
 ### Build
 
-`EPGStation-Notification`というバイナリファイルできればOK
+`epgst-notify` というバイナリファイルができればOK
 ```shell script
-$ cd epgstation_notification
-$ GOOS=linux GOARCH=amd64 go build -o "bin/epgstation-notification" main.go
+$ cd EPGStation-Notification
+$ GOOS=linux GOARCH=amd64 go build -o "bin/epgst-notify" main.go
 $ ls bin
-  epgstation-notification
+  epgst-notify
 ```
 
 ## リリース

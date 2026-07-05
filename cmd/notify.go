@@ -9,15 +9,28 @@ import (
 	"github.com/disgoorg/snowflake/v2"
 )
 
+const requestTimeout = 30 * time.Second
+
+const (
+	slackFieldMaxRunes  = 2000
+	slackTitleMaxRunes  = 256
+	discordFieldMaxRunes = 1024
+	discordTitleMaxRunes = 256
+)
+
 type notificationField struct {
 	name  string
 	value string
 }
 
 func formatProgramTime(startAt, endAt int) (string, string) {
-	start := time.Unix(int64(startAt/1000), 0).Format("2006-01-02 15:04")
-	end := time.Unix(int64(endAt/1000), 0).Format("2006-01-02 15:04")
-	return start, end
+	format := func(ts int) string {
+		if ts <= 0 {
+			return "-"
+		}
+		return time.Unix(int64(ts/1000), 0).Format("2006-01-02 15:04 MST")
+	}
+	return format(startAt), format(endAt)
 }
 
 func buildNotificationFields(env cmdEnv, withErrorInfo bool) []notificationField {
@@ -26,9 +39,14 @@ func buildNotificationFields(env cmdEnv, withErrorInfo bool) []notificationField
 	fields := []notificationField{
 		{name: "Channel", value: env.ChannelName + "/" + env.ChannelType},
 		{name: "Time", value: start + " ~ " + end},
-		{name: "Description", value: env.Description},
 	}
 
+	if env.Description != "" {
+		fields = append(fields, notificationField{name: "Description", value: env.Description})
+	}
+	if env.Extended != "" {
+		fields = append(fields, notificationField{name: "Extended", value: env.Extended})
+	}
 	if env.RecPath != "" {
 		fields = append(fields, notificationField{name: "RecPath", value: env.RecPath})
 	}
@@ -46,6 +64,22 @@ func buildNotificationFields(env cmdEnv, withErrorInfo bool) []notificationField
 	}
 
 	return fields
+}
+
+func truncateRunes(s string, maxRunes int) string {
+	if maxRunes <= 0 {
+		return ""
+	}
+
+	runes := []rune(s)
+	if len(runes) <= maxRunes {
+		return s
+	}
+	if maxRunes <= 3 {
+		return string(runes[:maxRunes])
+	}
+
+	return string(runes[:maxRunes-3]) + "..."
 }
 
 func parseDiscordWebhookID(id string) (snowflake.ID, error) {

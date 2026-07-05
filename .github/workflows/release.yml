@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - "v*"
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -46,16 +45,16 @@ jobs:
 
       - name: Build
         run: |
-          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o epgstation-notification main.go
+          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o epgst-notify main.go
 
       - name: Package
         run: |
-          mkdir -p dist/epgstation-notification
-          mv epgstation-notification dist/epgstation-notification/
-          cp bin/config.yml dist/epgstation-notification/
-          cd dist && zip -r "../epgstation-notification-v${{ steps.version.outputs.version }}-linux-amd64.zip" epgstation-notification/
+          mkdir -p dist/epgst-notify
+          mv epgst-notify dist/epgst-notify/
+          cp bin/config.yml dist/epgst-notify/
+          cd dist && zip -r "../epgst-notify-v${{ steps.version.outputs.version }}-linux-amd64.zip" epgst-notify/
           cd ..
-          sha256sum "epgstation-notification-v${{ steps.version.outputs.version }}-linux-amd64.zip" > checksums.txt
+          sha256sum "epgst-notify-v${{ steps.version.outputs.version }}-linux-amd64.zip" > checksums.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -64,5 +63,5 @@ jobs:
           name: v${{ steps.version.outputs.version }}
           generate_release_notes: true
           files: |
-            epgstation-notification-v${{ steps.version.outputs.version }}-linux-amd64.zip
+            epgst-notify-v${{ steps.version.outputs.version }}-linux-amd64.zip
             checksums.txt

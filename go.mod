@@ -1,6 +1,6 @@
-module epgstation_notification
+module epgst_notify
 
-go 1.25
+go 1.23
 
 require (
 	github.com/disgoorg/disgo v0.19.6
