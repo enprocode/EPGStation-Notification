@@ -18,6 +18,7 @@
 
 ## Security Recommendations
 
+- `config.yml` は **`epgst-notify` と同じディレクトリ** に配置してください
 - `bin/config.yml` には API トークンが含まれます。配置後は `chmod 600 bin/config.yml` を設定してください
 - トークンや Webhook URL を Issue やログに公開しないでください
-- Release 成果物に含まれる `config.yml` はテンプレートです。本番用の値に必ず差し替えてください
+- [GitHub Release](https://github.com/enprocode/EPGStation-Notification/releases) 成果物に含まれる `config.yml` はテンプレートです。本番用の値に必ず差し替えてください
