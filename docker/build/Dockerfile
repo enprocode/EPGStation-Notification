@@ -1,1 +1,3 @@
-FROM golang:1.18
+FROM golang:1.25-bookworm
+
+WORKDIR /opt/src

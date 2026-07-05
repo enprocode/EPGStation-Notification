@@ -124,6 +124,20 @@ go vet ./...
 go test ./...
 ```
 
+### Docker でビルド
+
+`go.mod` と同じ Go 1.25 環境でビルドする場合:
+
+```shell
+cd docker
+docker compose up -d --build
+docker compose exec go go vet ./...
+docker compose exec go go test ./...
+./docker.sh
+```
+
+`docker.sh` は Linux amd64 向けに `bin/epgst-notify` をビルドします。
+
 ### リリース
 
 バージョンはリポジトリ直下の `VERSION` ファイルで管理します。
