@@ -1,0 +1,9 @@
+version: "3"
+services:
+  go:
+    build: ./build
+    container_name: "${COMPOSE_PROJECT_NAME}"
+    working_dir: /opt/src
+    tty: true
+    volumes:
+      - ..:/opt/src

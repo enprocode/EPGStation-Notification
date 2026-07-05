@@ -1,1 +1,28 @@
 # EPGStation-Notification
+
+EPGStation の録画開始・終了・エラー時に Slack / Discord へ通知する CLI **`epgst-notify`** です。
+
+[![CI](https://github.com/enprocode/EPGStation-Notification/actions/workflows/ci.yml/badge.svg)](https://github.com/enprocode/EPGStation-Notification/actions/workflows/ci.yml)
+
+## クイックスタート
+
+1. [Releases](https://github.com/enprocode/EPGStation-Notification/releases) から zip を取得し、`epgst-notify` と `config.yml` を配置
+2. `config.yml` を編集し `chmod 600 config.yml`
+3. EPGStation の `config.yml` に外部コマンドを追加して再起動
+
+```yaml
+recordingStartCommand: "/path/to/bin/epgst-notify slackRecStart"
+recordingFinishCommand: "/path/to/bin/epgst-notify slackRecEnd"
+recordingFailedCommand: "/path/to/bin/epgst-notify slackRecError"
+```
+
+## ドキュメント
+
+| ドキュメント | 内容 |
+|-------------|------|
+| [導入手順](docs/setup.md) | 取得方法、Slack / Discord 設定、EPGStation 連携 |
+| [開発ガイド](docs/development.md) | ビルド、テスト、Docker、リリース、CI |
+
+## License
+
+MIT License — 詳細は [LICENSE](LICENSE)。脆弱性報告は [SECURITY.md](SECURITY.md)。
