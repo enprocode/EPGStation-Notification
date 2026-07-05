@@ -51,36 +51,31 @@ func DiscordSend(icon string, color int, withErrorInfo bool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
-	for batchStart := 0; batchStart < len(batches); batchStart += discordMaxEmbedsPerMessage {
-		batchEnd := batchStart + discordMaxEmbedsPerMessage
-		if batchEnd > len(batches) {
-			batchEnd = len(batches)
+	// Discord's 6000-character limit applies to the combined text of all embeds
+	// in a single message. Since each batch is already capped at that limit, we
+	// send one embed per message to stay within it.
+	for i, fields := range batches {
+		embedTitle := ""
+		if i == 0 {
+			embedTitle = title
 		}
 
-		embeds := make([]discord.Embed, batchEnd-batchStart)
-		for i, fields := range batches[batchStart:batchEnd] {
-			embedTitle := ""
-			if batchStart+i == 0 {
-				embedTitle = title
+		discordFields := make([]discord.EmbedField, len(fields))
+		for j, field := range fields {
+			discordFields[j] = discord.EmbedField{
+				Name:  field.name,
+				Value: field.value,
 			}
+		}
 
-			discordFields := make([]discord.EmbedField, len(fields))
-			for j, field := range fields {
-				discordFields[j] = discord.EmbedField{
-					Name:  field.name,
-					Value: field.value,
-				}
-			}
-
-			embeds[i] = discord.Embed{
-				Title:  embedTitle,
-				Color:  color,
-				Fields: discordFields,
-			}
+		embed := discord.Embed{
+			Title:  embedTitle,
+			Color:  color,
+			Fields: discordFields,
 		}
 
 		if _, err := client.CreateMessage(
-			discord.NewWebhookMessageCreate().WithEmbeds(embeds...),
+			discord.NewWebhookMessageCreate().WithEmbeds(embed),
 			rest.CreateWebhookMessageParams{},
 			rest.WithCtx(ctx),
 		); err != nil {
