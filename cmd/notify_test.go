@@ -34,6 +34,69 @@ func TestTruncateRunes(t *testing.T) {
 	}
 }
 
+func TestFormatChannel(t *testing.T) {
+	if got := formatChannel("NHK", "GR"); got != "NHK/GR" {
+		t.Fatalf("unexpected channel: %q", got)
+	}
+	if got := formatChannel("  ", ""); got != "" {
+		t.Fatalf("expected empty channel, got %q", got)
+	}
+}
+
+func TestBuildNotificationFieldsSkipsWhitespaceDescription(t *testing.T) {
+	fields := buildNotificationFields(cmdEnv{
+		ChannelName: "NHK",
+		ChannelType: "GR",
+		StartAt:     1728000000000,
+		EndAt:       1728003600000,
+		Description: "   ",
+	}, false)
+
+	for _, field := range fields {
+		if field.name == "Description" {
+			t.Fatal("expected whitespace-only description to be skipped")
+		}
+	}
+}
+
+func TestSplitDiscordField(t *testing.T) {
+	longValue := strings.Repeat("a", discordFieldMaxRunes+100)
+	parts := splitDiscordField("Description", longValue)
+	if len(parts) != 2 {
+		t.Fatalf("expected 2 parts, got %d", len(parts))
+	}
+	if len([]rune(parts[0].value)) != discordFieldMaxRunes {
+		t.Fatalf("unexpected first part length: %d", len([]rune(parts[0].value)))
+	}
+	if parts[0].name != "Description (1/2)" {
+		t.Fatalf("unexpected part name: %q", parts[0].name)
+	}
+}
+
+func TestSplitDiscordFieldSkipsEmpty(t *testing.T) {
+	if parts := splitDiscordField("Description", "   "); parts != nil {
+		t.Fatalf("expected nil parts for empty value, got %v", parts)
+	}
+}
+
+func TestDiscordEmbedFieldsFromNotification(t *testing.T) {
+	fields := discordEmbedFieldsFromNotification([]notificationField{
+		{name: "Description", value: "   "},
+		{name: "RecPath", value: "/recordings/test.m2ts"},
+		{name: "Extended", value: strings.Repeat("x", discordFieldMaxRunes+10)},
+	})
+
+	if len(fields) != 3 {
+		t.Fatalf("expected 3 sanitized fields, got %d", len(fields))
+	}
+	if fields[0].name != "RecPath" {
+		t.Fatalf("expected RecPath first, got %q", fields[0].name)
+	}
+	if fields[1].name != "Extended (1/2)" {
+		t.Fatalf("unexpected split field name: %q", fields[1].name)
+	}
+}
+
 func TestBuildNotificationFieldsWithErrorInfo(t *testing.T) {
 	fields := buildNotificationFields(cmdEnv{
 		ChannelName: "NHK",

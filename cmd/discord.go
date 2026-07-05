@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/rest"
@@ -28,12 +29,12 @@ func DiscordSend(icon string, color int, withErrorInfo bool) error {
 		return err
 	}
 
-	fields := buildNotificationFields(env, withErrorInfo)
+	fields := discordEmbedFieldsFromNotification(buildNotificationFields(env, withErrorInfo))
 	discordFields := make([]discord.EmbedField, len(fields))
 	for i, field := range fields {
 		discordFields[i] = discord.EmbedField{
-			Name:  truncateRunes(field.name, discordFieldMaxRunes),
-			Value: truncateRunes(field.value, discordFieldMaxRunes),
+			Name:  field.name,
+			Value: field.value,
 		}
 	}
 
@@ -43,7 +44,11 @@ func DiscordSend(icon string, color int, withErrorInfo bool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
-	title := truncateRunes(icon+env.Name, discordTitleMaxRunes)
+	title := truncateRunes(strings.TrimSpace(icon+env.Name), discordTitleMaxRunes)
+	if title == "" {
+		title = "Recording Notification"
+	}
+
 	if _, err := client.CreateMessage(
 		discord.NewWebhookMessageCreateBuilder().
 			SetEmbeds(

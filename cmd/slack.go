@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"net/http"
-	"time"
+	"strings"
 
 	"github.com/slack-go/slack"
 )
@@ -23,13 +23,18 @@ func Slack(icon, color string, withErrorInfo bool) error {
 	}
 
 	fields := buildNotificationFields(env, withErrorInfo)
-	slackFields := make([]slack.AttachmentField, len(fields))
-	for i, field := range fields {
-		slackFields[i] = slack.AttachmentField{
-			Title: truncateRunes(field.name, slackFieldMaxRunes),
-			Value: truncateRunes(field.value, slackFieldMaxRunes),
-			Short: false,
+	slackFields := make([]slack.AttachmentField, 0, len(fields))
+	for _, field := range fields {
+		name := strings.TrimSpace(field.name)
+		value := strings.TrimSpace(field.value)
+		if name == "" || value == "" {
+			continue
 		}
+		slackFields = append(slackFields, slack.AttachmentField{
+			Title: truncateRunes(name, slackFieldMaxRunes),
+			Value: truncateRunes(value, slackFieldMaxRunes),
+			Short: false,
+		})
 	}
 
 	httpClient := &http.Client{Timeout: requestTimeout}

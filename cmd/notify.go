@@ -12,10 +12,12 @@ import (
 const requestTimeout = 30 * time.Second
 
 const (
-	slackFieldMaxRunes  = 2000
-	slackTitleMaxRunes  = 256
-	discordFieldMaxRunes = 1024
-	discordTitleMaxRunes = 256
+	slackFieldMaxRunes     = 2000
+	slackTitleMaxRunes     = 256
+	discordFieldNameMaxRunes  = 256
+	discordFieldMaxRunes      = 1024
+	discordTitleMaxRunes      = 256
+	discordMaxEmbedFields     = 25
 )
 
 type notificationField struct {
@@ -33,37 +35,48 @@ func formatProgramTime(startAt, endAt int) (string, string) {
 	return format(startAt), format(endAt)
 }
 
+func formatChannel(name, channelType string) string {
+	name = strings.TrimSpace(name)
+	channelType = strings.TrimSpace(channelType)
+
+	switch {
+	case name != "" && channelType != "":
+		return name + "/" + channelType
+	case name != "":
+		return name
+	case channelType != "":
+		return channelType
+	default:
+		return ""
+	}
+}
+
 func buildNotificationFields(env cmdEnv, withErrorInfo bool) []notificationField {
 	start, end := formatProgramTime(env.StartAt, env.EndAt)
 
-	fields := []notificationField{
-		{name: "Channel", value: env.ChannelName + "/" + env.ChannelType},
-		{name: "Time", value: start + " ~ " + end},
-	}
-
-	if env.Description != "" {
-		fields = append(fields, notificationField{name: "Description", value: env.Description})
-	}
-	if env.Extended != "" {
-		fields = append(fields, notificationField{name: "Extended", value: env.Extended})
-	}
-	if env.RecPath != "" {
-		fields = append(fields, notificationField{name: "RecPath", value: env.RecPath})
-	}
+	fields := make([]notificationField, 0, 8)
+	fields = appendFieldIfPresent(fields, "Channel", formatChannel(env.ChannelName, env.ChannelType))
+	fields = appendFieldIfPresent(fields, "Time", start+" ~ "+end)
+	fields = appendFieldIfPresent(fields, "Description", env.Description)
+	fields = appendFieldIfPresent(fields, "Extended", env.Extended)
+	fields = appendFieldIfPresent(fields, "RecPath", env.RecPath)
 
 	if withErrorInfo {
-		if env.ErrorCnt != "" {
-			fields = append(fields, notificationField{name: "Error Count", value: env.ErrorCnt})
-		}
-		if env.DropCnt != "" {
-			fields = append(fields, notificationField{name: "Drop Count", value: env.DropCnt})
-		}
-		if env.LogPath != "" {
-			fields = append(fields, notificationField{name: "LogPath", value: env.LogPath})
-		}
+		fields = appendFieldIfPresent(fields, "Error Count", env.ErrorCnt)
+		fields = appendFieldIfPresent(fields, "Drop Count", env.DropCnt)
+		fields = appendFieldIfPresent(fields, "LogPath", env.LogPath)
 	}
 
 	return fields
+}
+
+func appendFieldIfPresent(fields []notificationField, name, value string) []notificationField {
+	name = strings.TrimSpace(name)
+	value = strings.TrimSpace(value)
+	if name == "" || value == "" {
+		return fields
+	}
+	return append(fields, notificationField{name: name, value: value})
 }
 
 func truncateRunes(s string, maxRunes int) string {
@@ -80,6 +93,56 @@ func truncateRunes(s string, maxRunes int) string {
 	}
 
 	return string(runes[:maxRunes-3]) + "..."
+}
+
+func splitDiscordField(name, value string) []notificationField {
+	name = strings.TrimSpace(name)
+	value = strings.TrimSpace(value)
+	if name == "" || value == "" {
+		return nil
+	}
+
+	runes := []rune(value)
+	if len(runes) <= discordFieldMaxRunes {
+		return []notificationField{{name: name, value: value}}
+	}
+
+	totalParts := (len(runes) + discordFieldMaxRunes - 1) / discordFieldMaxRunes
+	parts := make([]notificationField, 0, totalParts)
+	for i, start := 0, 0; start < len(runes); i++ {
+		end := start + discordFieldMaxRunes
+		if end > len(runes) {
+			end = len(runes)
+		}
+
+		partName := name
+		if totalParts > 1 {
+			partName = fmt.Sprintf("%s (%d/%d)", name, i+1, totalParts)
+		}
+
+		parts = append(parts, notificationField{
+			name:  truncateRunes(partName, discordFieldNameMaxRunes),
+			value: string(runes[start:end]),
+		})
+		start = end
+	}
+
+	return parts
+}
+
+func discordEmbedFieldsFromNotification(fields []notificationField) []notificationField {
+	sanitized := make([]notificationField, 0, len(fields))
+
+	for _, field := range fields {
+		for _, part := range splitDiscordField(field.name, field.value) {
+			if len(sanitized) >= discordMaxEmbedFields {
+				return sanitized
+			}
+			sanitized = append(sanitized, part)
+		}
+	}
+
+	return sanitized
 }
 
 func parseDiscordWebhookID(id string) (snowflake.ID, error) {
