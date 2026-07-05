@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/disgoorg/disgo/discord"
@@ -38,7 +39,12 @@ func DiscordSend(icon string, color int, withErrorInfo bool) error {
 		}
 	}
 
-	client := webhook.New(webhookID, cfg.DiscordCfg.DiscordWebhookToken)
+	httpClient := &http.Client{Timeout: requestTimeout}
+	client := webhook.New(
+		webhookID,
+		cfg.DiscordCfg.DiscordWebhookToken,
+		webhook.WithRestClientConfigOpts(rest.WithHTTPClient(httpClient)),
+	)
 	defer client.Close(context.Background())
 
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
@@ -50,16 +56,15 @@ func DiscordSend(icon string, color int, withErrorInfo bool) error {
 	}
 
 	if _, err := client.CreateMessage(
-		discord.NewWebhookMessageCreateBuilder().
-			SetEmbeds(
-				discord.Embed{
-					Title:  title,
-					Color:  color,
-					Fields: discordFields,
-				},
-			).Build(),
+		discord.NewWebhookMessageCreate().WithEmbeds(
+			discord.Embed{
+				Title:  title,
+				Color:  color,
+				Fields: discordFields,
+			},
+		),
 		rest.CreateWebhookMessageParams{},
-		rest.WithContext(ctx),
+		rest.WithCtx(ctx),
 	); err != nil {
 		return fmt.Errorf("post discord message: %w", err)
 	}
